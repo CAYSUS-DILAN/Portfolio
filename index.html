@@ -1,368 +1,553 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caysus Dilan Rodrigues</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>caysus@srv:~$</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
+:root {
+  --bg: #0c0c0c;
+  --term: #111111;
+  --border: #2a2a2a;
+  --green: #39ff14;
+  --green-dim: #1a7a08;
+  --cyan: #00d4ff;
+  --yellow: #f0e040;
+  --red: #ff4444;
+  --white: #e8e8e8;
+  --muted: #555;
+}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            transition: background 0.5s ease;
-            position: relative;
-        }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
 
-        #card {
-            width: 320px;
-            border-radius: 20px;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.25);
-            padding: 20px 24px 16px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
+body {
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  position: relative;
+}
 
-        .hanging-hook {
-            position: absolute;
-            top: -36px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 16px;
-            height: 8px;
-            border: 2px solid #888;
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
-        }
-        .hanging-string {
-            position: absolute;
-            top: -34px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 34px;
-            background: linear-gradient(to bottom, #888, transparent);
-        }
+/* Scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,.12) 2px, rgba(0,0,0,.12) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
 
-        .hanging-card {
-            animation: sway 4s ease-in-out infinite;
-            transform-origin: top center;
-        }
-        @keyframes sway {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(0.8deg); }
-            75% { transform: rotate(-0.8deg); }
-        }
+/* Ambient glow */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(57,255,20,.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-        .profile-circle {
-            width: 76px;
-            height: 76px;
-            border: 3px solid #e879f9;
-            border-radius: 50%;
-            overflow: hidden;
-            margin: 0 auto 10px;
-            background: white;
-        }
-        .profile-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
+/* ── Terminal window ── */
+.terminal {
+  width: min(700px, 96vw);
+  height: min(560px, 92vh);
+  background: var(--term);
+  border: 1px solid #222;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 1px rgba(57,255,20,.07),
+    0 0 80px rgba(57,255,20,.05),
+    0 30px 90px rgba(0,0,0,.9);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  overflow: hidden;
+}
 
-        #header      { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; }
-        #greeting    { font-size: 16px; margin-bottom: 8px; }
-        #description { font-size: 13px; line-height: 1.5; margin-bottom: 6px; }
-        #quote       { font-size: 12px; font-style: italic; line-height: 1.5; margin-bottom: 10px; }
+/* Title bar */
+.titlebar {
+  background: #181818;
+  border-bottom: 1px solid #222;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
-        .company-highlight {
-            border-radius: 10px;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            transition: transform 0.2s ease;
-            cursor: pointer;
-        }
-        .company-highlight:hover { transform: translateY(-2px); }
-        .company-highlight p { font-size: 13px; margin: 0; }
+.tb-dots { display: flex; gap: 6px; }
+.tb-dot  { width: 12px; height: 12px; border-radius: 50%; }
+.tb-dot.red    { background: #ff5f57; }
+.tb-dot.yellow { background: #febc2e; }
+.tb-dot.green  { background: #28c840; }
 
-        .email-box {
-            border-radius: 10px;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-            font-family: monospace;
-            font-size: 13px;
-            transition: transform 0.2s ease;
-            cursor: pointer;
-        }
-        .email-box:hover { transform: translateY(-2px); }
+.tb-title {
+  flex: 1; text-align: center;
+  font-size: 11px; color: #444;
+  letter-spacing: 1px;
+}
 
-        .social-row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
+.tb-title {
+  flex: 1; text-align: center;
+  font-size: 11px; color: #444;
+  letter-spacing: 1px;
+}
 
-        .social-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s ease;
-            text-decoration: none;
-        }
-        .social-icon:hover { transform: scale(1.1); }
+.tb-conn { font-size: 9px; color: var(--green-dim); letter-spacing: 1px; animation: connGlow 2s ease-in-out infinite; }
 
-        .tooltip { position: relative; display: inline-block; }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 70px;
-            background: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 4px 0;
-            position: absolute;
-            z-index: 10;
-            bottom: 115%;
-            left: 50%;
-            margin-left: -35px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 11px;
-            font-family: sans-serif;
-        }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+@keyframes connGlow {
+  0%, 100% { color: #1a7a08; text-shadow: none; }
+  50%       { color: #39ff14; text-shadow: 0 0 8px rgba(57,255,20,.8), 0 0 16px rgba(57,255,20,.4); }
+}
 
-        .color-bar { height: 3px; border-radius: 2px; display: flex; }
-        .color-segment { flex: 1; }
+.tb-dot.green {
+  background: #28c840;
+  animation: dotGlow 2s ease-in-out infinite;
+}
 
-        .footer {
-            margin-top: 8px;
-            font-size: 12px;
-            position: relative;
-            z-index: 1;
-        }
+@keyframes dotGlow {
+  0%, 100% { background: #1a7a08; box-shadow: none; }
+  50%       { background: #39ff14; box-shadow: 0 0 6px rgba(57,255,20,1), 0 0 14px rgba(57,255,20,.6); }
+}
 
-        #background-effects {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
-        }
+/* Output area */
+#output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 20px 6px;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--white);
+  scroll-behavior: smooth;
+}
 
-        .leaf, .snowflake, .star, .moon, .sun {
-            position: absolute;
-            user-select: none;
-            pointer-events: none;
-        }
-        .leaf { color: #4CAF50; }
-        .snowflake { color: #fff; }
-        .star { background: white; border-radius: 50%; }
-        .moon, .sun { border-radius: 50%; transition: top 2s ease, left 1s ease; }
-        .sun {
-            background: radial-gradient(circle at center, #FFD700, #FF4500);
-            box-shadow: 0 0 40px #FF4500;
-        }
-    </style>
+#output::-webkit-scrollbar { width: 4px; }
+#output::-webkit-scrollbar-track { background: transparent; }
+#output::-webkit-scrollbar-thumb { background: #252525; border-radius: 2px; }
+
+/* Input row */
+.input-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px 12px;
+  border-top: 1px solid #1c1c1c;
+  flex-shrink: 0;
+}
+
+.prompt-static { white-space: nowrap; font-size: 12.5px; }
+.pu { color: var(--green); }
+.pa { color: var(--white); }
+.ph { color: var(--cyan); }
+.pp { color: var(--yellow); }
+
+#cmd-input {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 12.5px;
+  caret-color: var(--green);
+  margin-left: 4px;
+}
+
+/* Output line colours */
+.g   { color: var(--green); }
+.c   { color: var(--cyan); }
+.y   { color: var(--yellow); }
+.r   { color: var(--red); }
+.w   { color: var(--white); }
+.dim { color: var(--muted); }
+.b   { font-weight: 700; }
+.it  { font-style: italic; }
+
+.line       { display: block; }
+.line-blank { display: block; height: 5px; }
+
+/* Help table */
+.help-table { display: table; }
+.help-row   { display: table-row; }
+.help-cmd   { display: table-cell; color: var(--cyan); padding-right: 28px; white-space: nowrap; }
+.help-desc  { display: table-cell; color: var(--white); }
+
+/* Skill bar */
+.bar-g { color: var(--green); }
+.bar-e { color: #282828; }
+
+/* Profile image */
+.profile-circle {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--green);
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-bottom: 8px;
+  box-shadow: 0 0 12px rgba(57,255,20,.25);
+}
+.profile-circle img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+</style>
 </head>
 <body>
-    <div id="background-effects"></div>
 
-    <div id="card" class="hanging-card">
-        <div class="hanging-hook"></div>
-        <div class="hanging-string"></div>
-
-        <h1 id="header">Caysus Dilan Rodrigues</h1>
-
-        <div class="profile-circle">
-            <img src="images/me.png" alt="Caysus Rodrigues">
-        </div>
-
-        <p id="greeting">Hi 👋</p>
-        <p id="description">I'm caysus. Engineering and cloud computing are my things.</p>
-        <p id="quote">a friend once told me it was ridiculous to have a personal website. i agree.</p>
-
-        <div class="company-highlight" id="company-highlight">
-            <p>Junior Engineer @ <span id="company-name" style="font-weight:600;">
-                <a href="https://avancerpi.com/" style="color:inherit;text-decoration:none;" target="_blank">AvancerPI Solutions</a>
-            </span></p>
-        </div>
-
-        <div class="email-box" id="email-box">
-            <a href="mailto:caysusdilanrodrigues@gmail.com" style="display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:inherit;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                </svg>
-                say hello!
-            </a>
-        </div>
-
-        <div class="social-row">
-            <div class="tooltip">
-                <a href="https://www.linkedin.com/in/caysus-dilan-rodrigues-913222319/" target="_blank" class="social-icon" style="background:#0A66C2;">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
-                        <rect x="2" y="9" width="4" height="12"></rect>
-                        <circle cx="4" cy="4" r="2"></circle>
-                    </svg>
-                </a>
-                <span class="tooltiptext">LinkedIn</span>
-            </div>
-            <div class="tooltip">
-                <a href="https://github.com/CAYSUS-DILAN" target="_blank" class="social-icon" style="background:#333;">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-                    </svg>
-                </a>
-                <span class="tooltiptext">GitHub</span>
-            </div>
-            <div class="tooltip">
-                <a href="resume/Caysus Dilan - Cloud,Devops.pdf" class="social-icon" style="background:#d35400;" target="_blank">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14,2 14,8 20,8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10,9 9,9 8,9"></polyline>
-                    </svg>
-                </a>
-                <span class="tooltiptext">Resume</span>
-            </div>
-        </div>
-
-        <div class="color-bar">
-            <div class="color-segment" style="background:#22c55e;"></div>
-            <div class="color-segment" style="background:#3b82f6;"></div>
-            <div class="color-segment" style="background:#ec4899;"></div>
-            <div class="color-segment" style="background:#3b82f6;"></div>
-            <div class="color-segment" style="background:#f59e0b;"></div>
-            <div class="color-segment" style="background:#8b5cf6;"></div>
-        </div>
+<div class="terminal">
+  <div class="titlebar">
+    <div class="tb-dots">
+      <div class="tb-dot red"></div>
+      <div class="tb-dot yellow"></div>
+      <div class="tb-dot green"></div>
     </div>
+    <div class="tb-title">caysus@srv-01 — bash </div>
+    <div class="tb-conn">● CONNECTED</div>
+  </div>
 
-    <div class="footer" id="footer-text">Made on Earth with ❤️</div>
+  <div id="output"></div>
 
-    <script>
-        function applyTheme(theme) {
-            const isDay = theme === 'day';
-            const card  = document.getElementById('card');
-            const bg    = document.getElementById('background-effects');
+  <div class="input-row">
+    <span class="prompt-static">
+      <span class="pu">caysus</span><span class="pa">@</span><span class="ph">srv-01</span><span class="pa">:</span><span class="pp">~</span><span class="pa">$&nbsp;</span>
+    </span>
+    <input id="cmd-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+  </div>
+</div>
 
-            document.body.style.background = isDay
-                ? 'linear-gradient(135deg, #87CEEB 0%, #E0F7FA 100%)'
-                : 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)';
+<script>
+const out = document.getElementById('output');
+const inp = document.getElementById('cmd-input');
 
-            card.style.background = isDay ? '#f8fafc' : '#1f2937';
-            card.style.color      = isDay ? '#1f2937' : '#fff';
+// ── Live session time line ────────────────────────────────────────────
+// Formats: "Thu, 14 May 2026 09:35:01 GMT"
+function fmtSessionTime(d) {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const pad = n => String(n).padStart(2,'0');
+  // Convert to IST (UTC+5:30)
+  const ist = new Date(d.getTime() + (5 * 60 + 30) * 60 * 1000);
+  let h = ist.getUTCHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${days[ist.getUTCDay()]}, ${ist.getUTCDate()} ${months[ist.getUTCMonth()]} ${ist.getUTCFullYear()} ${pad(h)}:${pad(ist.getUTCMinutes())}:${pad(ist.getUTCSeconds())} ${ampm} IST`;
+}
 
-            document.getElementById('header').style.color      = isDay ? '#1e293b' : '#fff';
-            document.getElementById('greeting').style.color    = isDay ? '#475569' : '#d1d5db';
-            document.getElementById('description').style.color = isDay ? '#64748b' : '#9ca3af';
-            document.getElementById('quote').style.color       = isDay ? '#64748b' : '#9ca3af';
+// Creates a live-ticking session line and appends it to output
+// Returns the interval id so we can store it
+let sessionTimerInterval = null;
 
-            document.getElementById('company-highlight').style.background = isDay
-                ? 'linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%)'
-                : 'linear-gradient(135deg, #4c3f6d 0%, #3a2f5a 100%)';
-            document.getElementById('company-name').style.color = isDay ? '#a855f7' : '#d1d5db';
+function appendLiveSessionLine() {
+  // Clear any existing session timer
+  if (sessionTimerInterval) clearInterval(sessionTimerInterval);
 
-            document.getElementById('email-box').style.background = isDay ? '#e2e8f0' : '#374151';
-            document.getElementById('email-box').style.color      = isDay ? '#334155' : '#d1d5db';
+  const span = document.createElement('span');
+  span.className = 'line';
+  span.id = 'session-time-line';
 
-            document.getElementById('footer-text').style.color = isDay ? '#666' : '#fff';
+  function update() {
+    span.innerHTML = `<span class="w">Session opened: ${fmtSessionTime(new Date())}</span>`;
+  }
+  update();
+  out.appendChild(span);
+  sessionTimerInterval = setInterval(update, 1000);
+}
 
-            const dayC   = ['#22c55e','#3b82f6','#ec4899','#3b82f6','#f59e0b','#8b5cf6'];
-            const nightC = ['#22c55e','#60a5fa','#ec4899','#60a5fa','#f59e0b','#a855f7'];
-            document.querySelectorAll('.color-segment').forEach((s, i) =>
-                s.style.background = isDay ? dayC[i] : nightC[i]);
+// ── Data ──────────────────────────────────────────────────────────────
+const COMMANDS = {
+  whoami: [
+    { profile: true },
+    { c:'g b', s:'CAYSUS DILAN RODRIGUES' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'c',   s:'Role     : Junior Engineer @ ', link:'https://avancerpi.com/', linkText:'AvancerPI Solutions' },
+    { c:'w',   s:'Focus    : Cloud · DevOps · Infrastructure' },
+    { c:'w',   s:'Certs    : Nutanix NCP-MCI610 · GCP Associate Cloud Engineer ·<br> AWS Certified Cloud Practitioner' },
+    { c:'w',   s:'Location : Bengaluru /  Mangaluru , India' },
+  ],
+  skills: [
+    { c:'y b', s:'// TECHNICAL SKILLS' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'c',   s:'Infrastructure & Virtualisation' },
+    { c:'w',   s:'  Nutanix AOS / AHV' },
+    { c:'w',   s:'  Nutanix Prism Element / Prism Central' },
+    { c:'w',   s:'  Nutanix Protection Domain (PD)' },
+    { c:'w',   s:'  Virtualisation  –  AHV / ESXi / Hyper-V' },
+    { c:'w',   s:'  Disaster Recovery' },
+    { blank: true },
+    { c:'c',   s:'Cloud Computing' },
+    { c:'w',   s:'  AWS  (EC2, S3, EBS, VPC, Route 53, EKS)' },
+    { c:'w',   s:'  GCP  (GKE, Vertex AI, AutoML, Cloud Run)' },
+    { blank: true },
+    { c:'c',   s:'DevOps & Containers' },
+    { c:'w',   s:'  Kubernetes / Docker' },
+    { c:'w',   s:'  Terraform' },
+    { c:'w',   s:'  Git / GitHub Actions / CI·CD' },
+    { blank: true },
+    { c:'c',   s:'Other' },
+    { c:'w',   s:'  Networking  ·  OpenCV  ·  AutoML' },
+  ],
+  experience: [
+    { c:'y b', s:'// EXPERIENCE' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'g b', s:'Junior Engineer' },
+    // FIX 3: AvancerPI Solutions as hyperlink
+    { c:'c',   s:'  ', link:'https://avancerpi.com/', linkText:'AvancerPI Solutions', suffix:'  ·  March 2026 – Present' },
+     { blank: true },
+    { c:'g b', s:'DevOps Intern' },
+    { c:'w',   s:'  ', link:'https://niveussolutions.com', linkText:'Niveus Solutions', suffix:'  ·  April 2025 – July 2025' },
+  ],
+  projects: [
+    { c:'y b', s:'// PROJECTS' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'w', s:'  ', link:'https://avancerpi.com/', linkText:'AvancerPI Solutions' },
+    { c:'g b', s:'[01]  Daikin Server Deployment' },
+    { c:'w',   s:'  Client   : Daikin' },
+    { c:'w',   s:'  Hardware  : Rack & Stack HP DL380 Gen12' },
+    { c:'w',   s:'  Platform  : Installed AOS and AHV on 3 nodes' },
+    { c:'w',   s:'  Cluster   : Created a 3 node cluster, configured' },
+    { c:'w',   s:'               Prism Element and Prism Central' },
+    { blank: true },
+    { c:'w',   s:'→  View all projects :' },
+    { c:'c',   s:'   ', link:'https://github.com/CAYSUS-DILAN', linkText:'github.com/CAYSUS-DILAN' },
+  ],
+  education: [
+    { c:'y b', s:'// EDUCATION' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'g b', s:'Master of Computer Application' },
+    { c:'w',   s:'  St. Joseph Engineering College, Mangaluru' },
+    { blank: true },
+    { c:'g b', s:'Bachelor of Computer Application' },
+    { c:'w',   s:'  St. Aloysius College Autonomous, Mangaluru' },
+  ],
+  certs: [
+    { c:'y b', s:'// CERTIFICATES & ACHIEVEMENTS' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'g',   s:'[CERT]   Nutanix NCP-MCI6 (2026–2029)  ', link:'https://www.credly.com/badges/768faa41-f6ca-4b9a-b272-47bb62dec7d2', linkText:'[view cert]' },
+    { c:'g',   s:'[CERT]   GCP Associate Cloud Engineer (2025–2028)  ', link:'https://www.credly.com/badges/f857f76d-71b3-44a2-b722-b73453a713f5/public_url', linkText:'[view cert]' },
+    { c:'g',   s:'[CERT]   AWS Certified Cloud Practitioner CLF-C02 (2025)  ', link:'https://www.udemy.com/certificate/UC-7499aaeb-26f7-44e9-8e5b-1833ceafc7ff/', linkText:'[view cert]' },
+    { c:'g',   s:'[CERT]   Cloud Service Providers – Great Learning' },
+    { c:'g',   s:'[CERT]   Intro to NoSQL Databases – Coursera' },
+    { c:'g',   s:'[CERT]   Intro to Git and GitHub – Coursera' },
+    { blank: true },
+    { c:'y',   s:'[PAPER]  Innovative Methods of Teaching & Learning (2024)' },
+    { c:'y',   s:'[CONF]   National Level Conference – CDIR (2023) - Advancements in ANPR Models' },
+    
+  ],
+  contact: [
+    { c:'y b', s:'// CONTACT' },
+    { c:'w',   s:'━'.repeat(38) },
+    { c:'c',   s:'Email    : ', link: 'mailto:caysusdilanrodrigues@gmail.com', linkText: 'caysusdilanrodrigues@gmail.com' },
+    { c:'c',   s:'LinkedIn : ', link: 'https://www.linkedin.com/in/caysus-dilan-rodrigues-913222319/', linkText: 'linkedin.com/in/caysus-dilan-rodrigues' },
+    { c:'c',   s:'GitHub   : ', link: 'https://github.com/CAYSUS-DILAN', linkText: 'github.com/CAYSUS-DILAN' },
+    { c:'c',   s:'Resume   : ', link: 'resume/Caysus Dilan - Cloud,Devops.pdf', linkText: 'Download PDF →' },
+  ],
+};
 
-            bg.innerHTML = '';
+const HELP = [
+  { c:'c b', s:'Available commands' },
+  { c:'w',   s:'━'.repeat(38) },
+  { help: true, rows: [
+    ['whoami',     'Who is Caysus?'],
+    ['skills',     'Technical skill set'],
+    ['experience', 'Work history'],
+    ['projects',   'Projects & builds'],
+    ['education',  'Academic background'],
+    ['certs',      'Certificates & achievements'],
+    ['contact',    'Get in touch'],
+    ['clear',      'Clear terminal'],
+  ]},
+];
 
-            if (isDay) {
-                const sun = document.createElement('div');
-                sun.className = 'sun';
-                sun.style.cssText = 'width:70px;height:70px;top:20px;';
-                sun.style.left = (window.innerWidth - 110) + 'px';
-                bg.appendChild(sun);
-                requestAnimationFrame(() => {
-                    const r = card.getBoundingClientRect();
-                    sun.style.left = Math.min(r.right + 50, window.innerWidth - 80) + 'px';
-                    sun.style.top  = Math.max(20, r.top - 100) + 'px';
-                });
+const BOOT = [
+  { c:'w',   s:'Establishing SSH connection...' },
+  { c:'g',   s:'Connected to caysus@srv-01' },
+  { blank: true },
+  { c:'g b', s:"Hi 👋  Welcome. If you're lost, type 'help'." },
+  { blank: true },
+];
 
-                if (!document.getElementById('leaf-style')) {
-                    const s = document.createElement('style');
-                    s.id = 'leaf-style';
-                    s.innerHTML = `@keyframes fall{0%{transform:translateY(-10px) rotate(0deg)}100%{transform:translateY(100vh) rotate(360deg)}}.leaf{animation:fall linear infinite;}`;
-                    document.head.appendChild(s);
-                }
-                for (let i = 0; i < 15; i++) {
-                    const l = document.createElement('div');
-                    l.className = 'leaf';
-                    l.innerHTML = '🍃';
-                    l.style.cssText = `left:${Math.random()*100}vw;top:-10px;opacity:${Math.random()};font-size:${Math.random()*14+8}px;animation-duration:${Math.random()*3+2}s;animation-delay:${Math.random()*3}s;`;
-                    bg.appendChild(l);
-                }
-            } else {
-                const moon = document.createElement('div');
-                moon.className = 'moon';
-                moon.style.cssText = 'width:50px;height:50px;top:20px;background:#f5f3ce;box-shadow:0 0 30px #f5f3ce;';
-                moon.style.left = (window.innerWidth - 100) + 'px';
-                bg.appendChild(moon);
-                requestAnimationFrame(() => {
-                    const r = card.getBoundingClientRect();
-                    moon.style.left = Math.min(r.right + 50, window.innerWidth - 60) + 'px';
-                    moon.style.top  = Math.max(20, r.top - 100) + 'px';
-                });
+// ── Render a single data row ──────────────────────────────────────────
+function mkBar(pct) {
+  const f = Math.round(pct / 5), e = 20 - f;
+  return `<span class="bar-g">${'█'.repeat(f)}</span><span class="bar-e">${'░'.repeat(e)}</span> <span class="dim">${pct}%</span>`;
+}
 
-                for (let i = 0; i < 100; i++) {
-                    const s = document.createElement('div');
-                    s.className = 'star';
-                    const sz = (Math.random() * 2 + 1) + 'px';
-                    s.style.cssText = `width:${sz};height:${sz};left:${Math.random()*100}vw;top:${Math.random()*100}vh;`;
-                    bg.appendChild(s);
-                }
+function renderRow(row) {
+  if (row.blank) {
+    const b = document.createElement('span');
+    b.className = 'line-blank';
+    out.appendChild(b);
+    return;
+  }
 
-                if (!document.getElementById('snow-style')) {
-                    const s = document.createElement('style');
-                    s.id = 'snow-style';
-                    s.innerHTML = `@keyframes snow{0%{transform:translateY(-10px)}100%{transform:translateY(100vh)}}.snowflake{animation:snow linear infinite;}`;
-                    document.head.appendChild(s);
-                }
-                for (let i = 0; i < 40; i++) {
-                    const sf = document.createElement('div');
-                    sf.className = 'snowflake';
-                    sf.innerHTML = '❄';
-                    sf.style.cssText = `left:${Math.random()*100}vw;top:-10px;opacity:${Math.random()};font-size:${Math.random()*8+4}px;animation-duration:${Math.random()*3+2}s;animation-delay:${Math.random()*3}s;`;
-                    bg.appendChild(sf);
-                }
-            }
-        }
+  if (row.profile) {
+    const span = document.createElement('span');
+    span.className = 'line';
+    span.innerHTML = `<div class="profile-circle"><img src="images/me.png" alt="Caysus Rodrigues"></div>`;
+    out.appendChild(span);
+    return;
+  }
 
-        function updateTheme() {
-            const h = new Date().getHours();
-            applyTheme(h > 6 && h < 18 ? 'day' : 'night');
-        }
+  if (row.help) {
+    const wrap = document.createElement('span');
+    wrap.className = 'line help-table';
+    row.rows.forEach(([cmd, desc]) => {
+      const r = document.createElement('span');
+      r.className = 'help-row';
+      r.innerHTML = `<span class="help-cmd">${cmd}</span><span class="help-desc">${desc}</span>`;
+      wrap.appendChild(r);
+    });
+    out.appendChild(wrap);
+    return;
+  }
 
-        window.addEventListener('resize', updateTheme);
-        document.addEventListener('DOMContentLoaded', updateTheme);
-    </script>
+  const span = document.createElement('span');
+  span.className = 'line';
+
+  const cls = (row.c || 'w').split(' ').join(' ');
+
+  if (row.email) {
+    span.innerHTML = `<span class="${cls}">${row.s}<a href="mailto:caysusdilanrodrigues@gmail.com" style="color:var(--green);text-decoration:none;">say hello →</a></span>`;
+  } else if (row.link && row.linkText && row.suffix) {
+    // link with text after it (e.g. company name followed by date)
+    span.innerHTML = `<span class="${cls}">${row.s}<a href="${row.link}" target="_blank" style="color:var(--cyan);text-decoration:underline;text-underline-offset:2px;">${row.linkText}</a><span class="w">${row.suffix}</span></span>`;
+  } else if (row.link && row.linkText) {
+    // text prefix + cyan hyperlink (works for both contact rows and cert [view cert] links)
+    span.innerHTML = `<span class="${cls}">${row.s}<a href="${row.link}" target="_blank" style="color:var(--cyan);text-decoration:underline;text-underline-offset:2px;">${row.linkText}</a></span>`;
+  } else if (row.link && !row.linkText) {
+    span.innerHTML = `<span class="${cls}"><a href="${row.link}" target="_blank" style="color:var(--muted);text-decoration:none;">${row.s}</a></span>`;
+  } else if (row.bar !== undefined) {
+    span.innerHTML = `<span class="${cls}">${row.s}  ${mkBar(row.bar)}</span>`;
+  } else {
+    span.innerHTML = `<span class="${cls}">${row.s}</span>`;
+  }
+
+  out.appendChild(span);
+}
+
+// ── Typewrite a list of rows ──────────────────────────────────────────
+function typeRows(rows, delay, cb) {
+  let i = 0;
+  function next() {
+    if (i >= rows.length) { if (cb) cb(); return; }
+    renderRow(rows[i++]);
+    out.scrollTop = out.scrollHeight;
+    setTimeout(next, delay);
+  }
+  next();
+}
+
+// ── Echo the user's command ───────────────────────────────────────────
+function echoCmd(txt) {
+  const span = document.createElement('span');
+  span.className = 'line';
+  span.innerHTML =
+    `<span class="pu">caysus</span><span class="pa">@</span><span class="ph">srv-01</span>` +
+    `<span class="pa">:</span><span class="pp">~</span><span class="pa">$&nbsp;</span>` +
+    `<span class="w">${txt}</span>`;
+  out.appendChild(span);
+}
+
+function blank() {
+  const b = document.createElement('span');
+  b.className = 'line-blank';
+  out.appendChild(b);
+}
+
+// ── Handle command ────────────────────────────────────────────────────
+function handle(raw) {
+  const cmd = raw.trim().toLowerCase();
+  if (!cmd) return;
+
+  echoCmd(raw.trim());
+
+  if (cmd === 'clear') {
+    out.innerHTML = '';
+    blank();
+    appendLiveSessionLine();
+    blank();
+    const welcome = document.createElement('span');
+    welcome.className = 'line';
+    welcome.innerHTML = `<span class="g b">If you're lost, type 'help'.</span>`;
+    out.appendChild(welcome);
+    blank();
+    typeRows(HELP, 32, () => { blank(); out.scrollTop = out.scrollHeight; });
+    return;
+  }
+
+  if (cmd === 'help') {
+    blank();
+    typeRows(HELP, 35, () => { blank(); out.scrollTop = out.scrollHeight; });
+    return;
+  }
+
+  if (COMMANDS[cmd]) {
+    blank();
+    typeRows(COMMANDS[cmd], 40, () => { blank(); out.scrollTop = out.scrollHeight; });
+    return;
+  }
+
+  blank();
+  const err = document.createElement('span');
+  err.className = 'line';
+  err.innerHTML = `<span class="r">bash: ${raw.trim()}: command not found</span>`;
+  out.appendChild(err);
+  const hint = document.createElement('span');
+  hint.className = 'line';
+  hint.innerHTML = `<span class="w">Type <span class="c">help</span> to list commands.</span>`;
+  out.appendChild(hint);
+  blank();
+  out.scrollTop = out.scrollHeight;
+}
+
+// ── Input ─────────────────────────────────────────────────────────────
+let history = [], histIdx = -1;
+
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = inp.value; inp.value = ''; histIdx = -1;
+    if (v.trim()) history.unshift(v.trim());
+    handle(v);
+  }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); if (histIdx < history.length-1) histIdx++; inp.value = history[histIdx] || ''; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (histIdx > 0) histIdx--; else { histIdx = -1; inp.value = ''; return; } inp.value = history[histIdx] || ''; }
+  if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); out.innerHTML = ''; blank(); typeRows(HELP, 32, () => { blank(); out.scrollTop = out.scrollHeight; }); }
+});
+
+document.querySelector('.terminal').addEventListener('click', () => inp.focus());
+
+// ── Boot ──────────────────────────────────────────────────────────────
+// Boot renders first two lines, then injects live session time, then rest
+const BOOT_PRE = [
+  { c:'w', s:'Establishing SSH connection...' },
+  { c:'g', s:'Connected to caysus@srv-01' },
+];
+const BOOT_POST = [
+  { blank: true },
+  { c:'g b', s:"Hi 👋  Welcome. If you're lost, type 'help'." },
+  { blank: true },
+];
+
+typeRows(BOOT_PRE, 55, () => {
+  appendLiveSessionLine();
+  out.scrollTop = out.scrollHeight;
+  setTimeout(() => {
+    typeRows(BOOT_POST, 55, () => {
+      typeRows(HELP, 32, () => { blank(); out.scrollTop = out.scrollHeight; });
+    });
+  }, 60);
+});
+</script>
 </body>
 </html>
